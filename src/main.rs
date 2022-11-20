@@ -1,6 +1,6 @@
 //! main.rs
 
-use autop2p::run;
+use autop2p::startup::run;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
