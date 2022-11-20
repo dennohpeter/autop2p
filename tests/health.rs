@@ -2,30 +2,46 @@
 
 use std::net::TcpListener;
 
+use mongodb::Client;
+
+pub struct TestApp {
+    pub address: String,
+    pub db: mongodb::Database,
+}
 /// Spin up an instance of our application
-/// and returns its address as a string
+/// and returns TestApp wrapper around it
 /// i.e. http://127.0.0.1:XXXX
-fn spawn_app() -> String {
+async fn spawn_app() -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
 
     let port = listener.local_addr().unwrap().port();
-    let server = autop2p::startup::run(listener).expect("Failed to bind address");
+
+    let uri =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "mongodb://localhost:27017".to_string());
+
+    let client = Client::with_uri_str(uri)
+        .await
+        .expect("Failed to connect to database");
+    let server = autop2p::startup::run(listener, client.clone()).expect("Failed to bind address");
 
     let _ = tokio::spawn(server);
 
-    format!("http://127.0.0.1:{}", port)
+    TestApp {
+        address: format!("http://127.0.0.1:{}", port),
+        db: client.database("autop2p"),
+    }
 }
 
 #[tokio::test]
 async fn health_check_works() {
     // Arrange
-    let address = spawn_app();
+    let app = spawn_app().await;
 
     let client = reqwest::Client::new();
 
     // Act
     let response = client
-        .get(&format!("{}/health", &address))
+        .get(&format!("{}/health", &app.address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -38,7 +54,7 @@ async fn health_check_works() {
 #[tokio::test]
 async fn buy_returns_200_for_valid_form_data() {
     // Arrange
-    let address = spawn_app();
+    let app = spawn_app().await;
 
     let client = reqwest::Client::new();
 
@@ -46,7 +62,7 @@ async fn buy_returns_200_for_valid_form_data() {
 
     // Act
     let response = client
-        .post(&format!("{}/buy", &address))
+        .post(&format!("{}/buy", &app.address))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -61,7 +77,7 @@ async fn buy_returns_200_for_valid_form_data() {
 #[tokio::test]
 async fn buy_returns_400_when_data_is_missing() {
     // Arrange
-    let address = spawn_app();
+    let app = spawn_app().await;
 
     let client = reqwest::Client::new();
 
@@ -84,7 +100,7 @@ async fn buy_returns_400_when_data_is_missing() {
     for (body, error_message) in test_cases {
         // Act
         let response = client
-            .post(&format!("{}/buy", &address))
+            .post(&format!("{}/buy", &app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body)
             .send()

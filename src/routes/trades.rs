@@ -4,13 +4,15 @@ use actix_web::{web, HttpResponse, Responder};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct BuyParams {
+pub struct Transaction {
     token: String,
-    amount: u32,
+    amount: rust_decimal::Decimal,
     from: String,
     to: String,
+    fee: rust_decimal::Decimal,
 }
-pub async fn buy(_form: web::Form<BuyParams>) -> impl Responder {
+
+pub async fn buy(_payload: web::Json<Transaction>) -> impl Responder {
     HttpResponse::Ok()
 }
 
