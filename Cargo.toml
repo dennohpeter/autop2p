@@ -1,0 +1,22 @@
+[package]
+name = "autop2p"
+description = "A simple p2p crypto<->fiat application"
+version = "0.1.0"
+edition = "2021"
+authors = ["Dennoh Peter <mail@dennohpeter.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+path = "src/main.rs"
+name = "autop2p"
+
+[dependencies]
+actix-web = "4.2.1"
+
+[dev-dependencies]
+reqwest = "0.11.13"
+tokio = {version = "1.22.0", features = ["macros", "rt-multi-thread"]}
