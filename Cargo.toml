@@ -16,11 +16,15 @@ name = "autop2p"
 
 [dependencies]
 actix-web = "4.2.1"
+dotenv = "0.15.0"
+env_logger = "0.9.3"
+log = "0.4.17"
 # ethers = "1.0.0"
 mongodb = "2.3.1"
 rust_decimal = "1.26.1"
 serde = { version = "1.0.147", features = ["derive"]}
+reqwest = { version = "0.11.13", features = ["json"] }
+mpesa = "0.4.2"
 
 [dev-dependencies]
-reqwest = "0.11.13"
 tokio = { version = "1.22.0", features = ["macros", "rt-multi-thread"] }
